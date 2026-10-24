@@ -1,0 +1,13 @@
+#!/bin/bash
+# djsync launcher: keeps the venv out of your PATH and your shell config.
+# Resolves its own location, including through a symlink, so the project can be
+# moved anywhere without editing this file.
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+DJSYNC_HOME="$(cd -P "$(dirname "$SOURCE")/.." && pwd)"
+export PYTHONPATH="$DJSYNC_HOME"
+exec "$DJSYNC_HOME/.venv/bin/python" -m djsync.cli "$@"

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.jurekkrosta.djsync</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>__DJSYNC_HOME__/bin/djsync</string>
+        <string>sync</string>
+        <string>--notify</string>
+    </array>
+
+    <!-- rekordbox checkpoints its WAL into master.db when it quits, which is
+         exactly the moment we want to sync. -->
+    <key>WatchPaths</key>
+    <array>
+        <string>__HOME__/Library/Pioneer/rekordbox/master.db</string>
+    </array>
+
+    <!-- Fallback, in case the watch never fires (for example after a crash). -->
+    <key>StartInterval</key>
+    <integer>1800</integer>
+
+    <!-- Never fire more than once every 5 minutes. -->
+    <key>ThrottleInterval</key>
+    <integer>300</integer>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>__DJSYNC_HOME__/logs/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>__DJSYNC_HOME__/logs/launchd.err.log</string>
+
+    <key>ProcessType</key>
+    <string>Background</string>
+</dict>
+</plist>

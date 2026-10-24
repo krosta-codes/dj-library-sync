@@ -1,0 +1,45 @@
+# djsync configuration. Paths support ~ expansion.
+
+[paths]
+# rekordbox_db = "~/Library/Pioneer/rekordbox/master.db"
+# traktor_nml  = "~/Documents/Native Instruments/Traktor 4.4.1/collection.nml"
+
+[sync]
+sync_cues      = true
+sync_beatgrid  = true
+sync_ratings   = true
+sync_playlists = true
+
+# rekordbox colour and My Tags become #hashtags in the Traktor comment field,
+# which is the only place Traktor can search them.
+tags_into_comment = true
+
+# Set Traktor's Analysis Lock on every track Traktor has already analysed, so
+# analysis can never overwrite the imported grid, BPM, key or gain. Tracks
+# Traktor has not scanned yet are deliberately left unlocked, otherwise they
+# would never get a waveform. They get locked on the sync after you analyse.
+analysis_lock = true
+
+# rekordbox can hold more hot cues than Traktor's 8 pads. When a cue sits in
+# slot I or beyond, put it in the first free Traktor pad instead of dropping it.
+# Cues that already have a pad are never moved. All 10 affected tracks had free
+# pads, checked 2026-09-20.
+remap_overflow_cues = true
+
+# Delete Traktor entries whose audio file no longer exists on disk.
+remove_dead_files = false
+
+# Playlists not worth carrying over.
+skip_playlists = ["History"]
+skip_playlist_prefixes = ["HISTORY "]
+
+# Only sync tracks under these folders. Empty = the whole library.
+include_roots = []
+
+backups = 20
+
+[playlists.rename]
+# Only needed when a Traktor node name cannot be derived from the rekordbox one
+# by stripping a leading sort number. "1 Techno", "01. Techno" and "2 - House"
+# are matched automatically, no entry required.
+# "Drummm Bass" = "4 DnB"
