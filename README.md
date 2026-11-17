@@ -140,3 +140,10 @@ state.json            fingerprint of the last synced library
 whether an app is blocking the run. Force one with `djsync --force`.
 
 **Agent logs:** `logs/launchd.err.log` and `logs/djsync.log`.
+
+## Credit
+
+Built by [Jurek Krosta](https://jurekkrosta.com) ("AI Slop - aber richtig").
+Licensed under Apache-2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+The name "DJ Library Sync" and the Krosta brand are not covered by the license, see [TRADEMARK.md](TRADEMARK.md).
+Need this built for your shop or team? [Contact](https://jurekkrosta.com).
