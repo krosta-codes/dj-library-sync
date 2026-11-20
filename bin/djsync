@@ -10,4 +10,11 @@ while [ -L "$SOURCE" ]; do
 done
 DJSYNC_HOME="$(cd -P "$(dirname "$SOURCE")/.." && pwd)"
 export PYTHONPATH="$DJSYNC_HOME"
+# Self-heal: a Homebrew Python upgrade deletes the interpreter the venv points to.
+if ! "$DJSYNC_HOME/.venv/bin/python" -c "import pyrekordbox" 2>/dev/null; then
+    echo "djsync: virtualenv broken or missing, rebuilding it once" >&2
+    rm -rf "$DJSYNC_HOME/.venv"
+    python3 -m venv "$DJSYNC_HOME/.venv" && "$DJSYNC_HOME/.venv/bin/pip" install --quiet --upgrade pip pyrekordbox \
+        || { echo "djsync: rebuild failed, run $DJSYNC_HOME/install.sh" >&2; exit 1; }
+fi
 exec "$DJSYNC_HOME/.venv/bin/python" -m djsync.cli "$@"

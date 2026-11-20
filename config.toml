@@ -22,8 +22,7 @@ analysis_lock = true
 
 # rekordbox can hold more hot cues than Traktor's 8 pads. When a cue sits in
 # slot I or beyond, put it in the first free Traktor pad instead of dropping it.
-# Cues that already have a pad are never moved. All 10 affected tracks had free
-# pads, checked 2026-09-20.
+# Cues that already have a pad are never moved.
 remap_overflow_cues = true
 
 # Delete Traktor entries whose audio file no longer exists on disk.

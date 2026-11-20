@@ -13,6 +13,7 @@ from pathlib import Path
 from .config import Config
 from .rekordbox import RekordboxSnapshot
 from .traktor import SyncReport, TraktorCollection
+from . import update
 
 log = logging.getLogger("djsync")
 
@@ -177,11 +178,22 @@ def run_restore(args: argparse.Namespace, cfg: Config) -> int:
     return 0
 
 
+def announce_update(args: argparse.Namespace) -> None:
+    """Once a day at most: one stderr line in a terminal, one notification per version in the background."""
+    tag = update.daily_check()
+    if not tag:
+        return
+    if sys.stderr.isatty():
+        print(f"djsync {tag} is out (you have {update.current_version()}). Run: djsync update", file=sys.stderr)
+    elif args.notify and not update.already_notified(tag):
+        notify("djsync update", f"{tag} is out. Run: djsync update")
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="djsync", description="Sync the rekordbox library and playlists into Traktor 4.")
     parser.add_argument("command", nargs="?", default="sync",
-                        choices=["sync", "status", "restore"])
+                        choices=["sync", "status", "restore", "update"])
     parser.add_argument("--dry-run", action="store_true",
                         help="report what would change, write nothing")
     parser.add_argument("--force", action="store_true",
@@ -191,11 +203,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--notify", action="store_true",
                         help="post a macOS notification when something changed")
     parser.add_argument("-v", "--verbose", action="store_true")
+    parser.add_argument("--version", action="version", version=f"djsync {update.current_version()}")
     args = parser.parse_args(argv)
+
+    if args.command == "update":
+        return update.run_update()
 
     cfg = Config.load(args.config)
     setup_logging(cfg.log_file, args.verbose)
 
+    announce_update(args)
     if args.command == "status":
         return run_status(cfg)
     if args.command == "restore":

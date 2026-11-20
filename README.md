@@ -1,19 +1,34 @@
-# djsync: rekordbox to Traktor 4
+# DJ Library Sync
 
-One-way sync of the rekordbox 6 library into Traktor 4. Tracks, metadata,
-ratings, hot cues, loops, beatgrids and the full playlist tree.
+**Keeps Traktor 4 in sync with your rekordbox library, cues, grids, playlists and all, so you can prep in one app and play in the other.**
 
-It reads a snapshot copy of `master.db` directly, so there is no XML export step
-and no GUI. It never writes to rekordbox.
+[![License](https://img.shields.io/badge/license-Apache--2.0-black)](LICENSE) ![Platform](https://img.shields.io/badge/macOS-rekordbox%206%20%E2%86%92%20Traktor%204-black) [![Release](https://img.shields.io/github/v/release/krosta-codes/dj-library-sync)](https://github.com/krosta-codes/dj-library-sync/releases)
+
+## Why this exists
+
+I prep tracks in rekordbox and play out on Traktor. The usual route is an XML export plus a converter, repeated by hand after every prep session. So `djsync` reads rekordbox's own database directly and rewrites Traktor's `collection.nml` the way Traktor itself would. It runs on its own when you quit rekordbox. You never think about it again, which is the whole point.
+
+## What it does
+
+- Copies tracks, metadata, ratings, keys, hot cues, memory cues, loops, beatgrids and the full playlist tree from rekordbox 6 into Traktor 4.
+- Reads a snapshot of `master.db` directly: no XML export, no GUI. **Never writes to rekordbox.**
+- Runs in the background: syncs when rekordbox quits, and every 30 minutes as a fallback.
+- Keeps what Traktor already knows (waveforms, cover art, loudness, Traktor-only tracks and playlists).
+- Backs up `collection.nml` before every write and rolls back with one command.
 
 ## Install
 
+| You need | Why |
+|---|---|
+| macOS with Python 3 (`python3`) | runs the sync |
+| rekordbox 6 and Traktor 4, both on this Mac | the two libraries |
+
 ```bash
+git clone https://github.com/krosta-codes/dj-library-sync.git ~/Projects/apps/dj-library-sync
 ~/Projects/apps/dj-library-sync/install.sh
 ```
 
-Creates the virtualenv, installs `pyrekordbox`, and offers to install the
-background agent.
+The installer creates a virtualenv, installs [pyrekordbox](https://github.com/dylanljones/pyrekordbox), shows `djsync status` and offers to install the background agent. It finds `master.db` and the newest `Traktor */collection.nml` on its own; override both in `config.toml`.
 
 ## Use
 
@@ -23,10 +38,14 @@ djsync --dry-run       # report what would change, write nothing
 djsync status          # paths, pending changes, last run, backup count
 djsync restore         # roll back to the newest backup
 djsync restore --file backups/collection-20260920-152549.nml
+djsync update          # pull the latest version
 ```
 
-With the agent installed you never run it: it syncs when rekordbox quits, and
-every 30 minutes as a fallback.
+With the agent installed you never run it by hand.
+
+## Updates
+
+`djsync` checks this repo's releases at most once a day. In a terminal it prints one line when a new version is out; the background agent posts one notification per version instead. `djsync update` pulls your clone and refreshes the dependencies. The check is one request to the GitHub API and nothing else; turn it off with `UPDATE_CHECK=0`.
 
 ## Important: stop Traktor rewriting the imported beatgrids
 
@@ -34,7 +53,7 @@ Traktor still has to analyse each new track once, for the waveform stripe and
 auto gain. Analysis also recalculates BPM and, by default, lays down its own
 grid marker on top of the one this tool imported.
 
-Good news first, checked against your `Traktor Settings.tsi`:
+Look up three settings in your `Traktor Settings.tsi` (in the Traktor folder under `~/Documents/Native Instruments`). A setup where the first two are 0 is the safe case:
 
 ```
 BackgroundThread.AutoAnalyze       = 0    nothing is analysed on import
@@ -42,7 +61,7 @@ BackgroundThread.AutoAnalyzeOnLoad = 0    nothing is analysed on deck load
 Browser.BPM.AutomaticMarkers       = 1    analysis DOES place grid markers
 ```
 
-So Traktor never touches a track until you explicitly analyse it. Do it in this
+With those values Traktor never touches a track until you explicitly analyse it. Then, in this
 order:
 
 1. **Preferences, Analyze Options, BPM Detection.** It is a dropdown, not a
@@ -90,14 +109,15 @@ whose name matches a rekordbox playlist get replaced.
 | Beatgrid, first downbeat | `CUE_V2 TYPE="4"` plus `GRID BPM` |
 | Colour, My Tags | `#hashtags` appended to the comment |
 
-## Known limits
+## Known quirks
 
 - Variable beatgrids collapse to one marker plus a constant BPM.
 - Traktor has 8 hot cue slots, rekordbox has 16. With `remap_overflow_cues`
   the extras land in free pads, if there are any free pads left.
 - Cue colours do not transfer: Traktor colours cues by type.
 - rekordbox smart playlists come across as empty lists.
-- One way only. Edits made in Traktor are overwritten on the next sync.
+- One way only. Edits made in Traktor are overwritten on the next sync. Treat rekordbox as the source of truth and Traktor as the stage.
+- If a Homebrew Python upgrade breaks the virtualenv, the launcher notices and rebuilds it once on the next run.
 
 ## Configuration
 
@@ -122,11 +142,17 @@ whose name matches a rekordbox playlist get replaced.
 djsync/rekordbox.py   read master.db and the ANLZ beatgrids
 djsync/traktor.py     parse, merge and write collection.nml
 djsync/cli.py         commands, safety guards, logging
+djsync/update.py      daily release check, djsync update
+VERSION               current version
 config.toml           settings
 backups/              rolling collection.nml backups
 logs/djsync.log       every run
 state.json            fingerprint of the last synced library
 ```
+
+## Privacy
+
+Everything runs on your Mac. The only network request is the daily update check to api.github.com (`UPDATE_CHECK=0` turns it off).
 
 ## Troubleshooting
 
@@ -141,7 +167,7 @@ whether an app is blocking the run. Force one with `djsync --force`.
 
 **Agent logs:** `logs/launchd.err.log` and `logs/djsync.log`.
 
-## Credit
+---
 
 Built by [Jurek Krosta](https://jurekkrosta.com) ("AI Slop - aber richtig").
 Licensed under Apache-2.0, see [LICENSE](LICENSE) and [NOTICE](NOTICE).
